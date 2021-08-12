@@ -2,6 +2,9 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
+	"log"
+	"net/http"
 
 	"github.com/TechBowl-japan/go-stations/model"
 	"github.com/TechBowl-japan/go-stations/service"
@@ -21,8 +24,8 @@ func NewTODOHandler(svc *service.TODOService) *TODOHandler {
 
 // Create handles the endpoint that creates the TODO.
 func (h *TODOHandler) Create(ctx context.Context, req *model.CreateTODORequest) (*model.CreateTODOResponse, error) {
-	_, _ = h.svc.CreateTODO(ctx, "", "")
-	return &model.CreateTODOResponse{}, nil
+	todo, err := h.svc.CreateTODO(ctx, req.Subject, req.Description)
+	return &model.CreateTODOResponse{TODO: *todo}, err
 }
 
 // Read handles the endpoint that reads the TODOs.
@@ -41,4 +44,39 @@ func (h *TODOHandler) Update(ctx context.Context, req *model.UpdateTODORequest) 
 func (h *TODOHandler) Delete(ctx context.Context, req *model.DeleteTODORequest) (*model.DeleteTODOResponse, error) {
 	_ = h.svc.DeleteTODO(ctx, nil)
 	return &model.DeleteTODOResponse{}, nil
+}
+
+func (h *TODOHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "POST":
+		body := r.Body
+		defer body.Close()
+		var req model.CreateTODORequest
+		if err := json.NewDecoder(body).Decode(&req); err != nil {
+			log.Fatal(err)
+			return
+		}
+
+		if req.Subject == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		res := &model.HealthzResponse{Message: "OK"}
+
+		if err := json.NewEncoder(w).Encode(res); err != nil {
+			log.Fatal(err)
+			return
+		}
+		h.Create(r.Context(), &req)
+		// if err != nil {
+		// 	log.Fatal(err)
+		// 	return
+		// }
+		// fmt.Println("-------------")
+		// fmt.Println("-------------")
+		// if err := json.NewEncoder(w).Encode(todo); err != nil {
+		// 	log.Fatal(err)
+		// 	return
+		// }
+	}
 }
