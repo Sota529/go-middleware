@@ -7,7 +7,7 @@ import (
 type (
 	// A TODO expresses ...
 	TODO struct {
-		ID          int64     `json:"id"`
+		ID          float64     `json:"id"`
 		Subject     string    `json:"subject"`
 		Description string    `json:"description"`
 		CreatedAt   time.Time `json:"created_at"`

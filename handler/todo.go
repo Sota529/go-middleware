@@ -61,22 +61,14 @@ func (h *TODOHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		res := &model.HealthzResponse{Message: "OK"}
-
-		if err := json.NewEncoder(w).Encode(res); err != nil {
+		todo, err := h.Create(r.Context(), &req)
+		if err != nil {
 			log.Fatal(err)
 			return
 		}
-		h.Create(r.Context(), &req)
-		// if err != nil {
-		// 	log.Fatal(err)
-		// 	return
-		// }
-		// fmt.Println("-------------")
-		// fmt.Println("-------------")
-		// if err := json.NewEncoder(w).Encode(todo); err != nil {
-		// 	log.Fatal(err)
-		// 	return
-		// }
+		if err := json.NewEncoder(w).Encode(todo); err != nil {
+			log.Fatal(err)
+			return
+		}
 	}
 }
