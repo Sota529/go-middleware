@@ -16,7 +16,7 @@ import (
 )
 
 func TestStation9(t *testing.T) {
-	dbPath := "./temp_test.db"
+	dbPath := "./todo.db"
 	if err := os.Setenv("DB_PATH", dbPath); err != nil {
 		t.Error("エラーが発生しました", err)
 		return

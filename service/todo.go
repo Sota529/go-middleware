@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"time"
 
 	"github.com/TechBowl-japan/go-stations/model"
@@ -47,9 +46,9 @@ func (s *TODOService) CreateTODO(ctx context.Context, subject, description strin
 	if err = result.Scan(&Subject, &Description, &CreatedAt, &UpdatedAt); err != nil {
 		return nil, err
 	}
-	
+
 	todo := &model.TODO{
-		ID: float64(todoid),
+		ID:          float64(todoid),
 		Subject:     Subject,
 		Description: Description,
 		CreatedAt:   CreatedAt,
