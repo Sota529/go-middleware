@@ -31,7 +31,7 @@ type (
 
 	// A UpdateTODORequest expresses ...
 	UpdateTODORequest struct{
-		ID          int   `json:"id"`
+		ID          int64   `json:"id"`
 		Subject     string    `json:"subject"`
 		Description string    `json:"description"`
 	}
