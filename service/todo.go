@@ -64,8 +64,45 @@ func (s *TODOService) ReadTODO(ctx context.Context, prevID, size int64) ([]*mode
 		read       = `SELECT id, subject, description, created_at, updated_at FROM todos ORDER BY id DESC LIMIT ?`
 		readWithID = `SELECT id, subject, description, created_at, updated_at FROM todos WHERE id < ? ORDER BY id DESC LIMIT ?`
 	)
-
-	return nil, nil
+	todos := []*model.TODO{}
+	if prevID != 0 {
+		rows, err := s.db.QueryContext(ctx, readWithID, prevID, size)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var Id int64
+			var Subject string
+			var Description string
+			var CreatedAt time.Time
+			var UpdatedAt time.Time
+			if err = rows.Scan(&Id, &Subject, &Description, &CreatedAt, &UpdatedAt); err != nil {
+				return nil, err
+			}
+			todo := &model.TODO{ID: Id, Subject: Subject, Description: Description, CreatedAt: CreatedAt, UpdatedAt: UpdatedAt}
+			todos = append(todos, todo)
+		}
+		return todos, err
+	}
+	rows, err := s.db.QueryContext(ctx, read, size)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var Id int64
+		var Subject string
+		var Description string
+		var CreatedAt time.Time
+		var UpdatedAt time.Time
+		if err = rows.Scan(&Id, &Subject, &Description, &CreatedAt, &UpdatedAt); err != nil {
+			return nil, err
+		}
+		todo := &model.TODO{ID: Id, Subject: Subject, Description: Description, CreatedAt: CreatedAt, UpdatedAt: UpdatedAt}
+		todos = append(todos, todo)
+	}
+	return todos, err
 }
 
 // UpdateTODO updates the TODO on DB.
@@ -78,7 +115,7 @@ func (s *TODOService) UpdateTODO(ctx context.Context, id int64, subject, descrip
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var Subject string
 	var Description string
 	var CreatedAt time.Time
