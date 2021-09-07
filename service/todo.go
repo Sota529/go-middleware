@@ -80,7 +80,13 @@ func (s *TODOService) ReadTODO(ctx context.Context, prevID, size int64) ([]*mode
 			if err = rows.Scan(&Id, &Subject, &Description, &CreatedAt, &UpdatedAt); err != nil {
 				return nil, err
 			}
-			todo := &model.TODO{ID: Id, Subject: Subject, Description: Description, CreatedAt: CreatedAt, UpdatedAt: UpdatedAt}
+			todo := &model.TODO{
+				ID:          Id,
+				Subject:     Subject,
+				Description: Description,
+				CreatedAt:   CreatedAt,
+				UpdatedAt:   UpdatedAt,
+			}
 			todos = append(todos, todo)
 		}
 		return todos, err
@@ -99,7 +105,13 @@ func (s *TODOService) ReadTODO(ctx context.Context, prevID, size int64) ([]*mode
 		if err = rows.Scan(&Id, &Subject, &Description, &CreatedAt, &UpdatedAt); err != nil {
 			return nil, err
 		}
-		todo := &model.TODO{ID: Id, Subject: Subject, Description: Description, CreatedAt: CreatedAt, UpdatedAt: UpdatedAt}
+		todo := &model.TODO{
+			ID:          Id,
+			Subject:     Subject,
+			Description: Description,
+			CreatedAt:   CreatedAt,
+			UpdatedAt:   UpdatedAt,
+		}
 		todos = append(todos, todo)
 	}
 	return todos, err
