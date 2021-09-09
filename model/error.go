@@ -1,9 +1,8 @@
 package model
 
 type ErrNotFound struct {
-	error
 }
 
-type error interface {
-	Error() string
+func (err ErrNotFound) Error() string {
+	return ""
 }
