@@ -3,6 +3,9 @@ package service
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/TechBowl-japan/go-stations/model"
@@ -65,8 +68,15 @@ func (s *TODOService) ReadTODO(ctx context.Context, prevID, size int64) ([]*mode
 		readWithID = `SELECT id, subject, description, created_at, updated_at FROM todos WHERE id < ? ORDER BY id DESC LIMIT ?`
 	)
 	todos := []*model.TODO{}
+	var readSize int64
+	if size == 0 {
+		readSize = 3
+	} else {
+		readSize = size
+	}
+
 	if prevID != 0 {
-		rows, err := s.db.QueryContext(ctx, readWithID, prevID, size)
+		rows, err := s.db.QueryContext(ctx, readWithID, prevID, readSize)
 		if err != nil {
 			return nil, err
 		}
@@ -87,11 +97,13 @@ func (s *TODOService) ReadTODO(ctx context.Context, prevID, size int64) ([]*mode
 				CreatedAt:   CreatedAt,
 				UpdatedAt:   UpdatedAt,
 			}
+
 			todos = append(todos, todo)
 		}
 		return todos, err
 	}
-	rows, err := s.db.QueryContext(ctx, read, size)
+
+	rows, err := s.db.QueryContext(ctx, read, readSize)
 	if err != nil {
 		return nil, err
 	}
@@ -152,6 +164,37 @@ func (s *TODOService) UpdateTODO(ctx context.Context, id int64, subject, descrip
 // DeleteTODO deletes TODOs on DB by ids.
 func (s *TODOService) DeleteTODO(ctx context.Context, ids []int64) error {
 	const deleteFmt = `DELETE FROM todos WHERE id IN (?%s)`
+	if len(ids) == 0 {
+		return nil
+	}
 
-	return nil
+	var arg []interface{}
+	for _, id := range ids {
+		idToInt := strconv.FormatInt(id, 10)
+		arg = append(arg, idToInt)
+	}
+
+	var query string
+	if len(ids) == 1 {
+		query = fmt.Sprintf(deleteFmt, "")
+	} else {
+		querySymbol := strings.Repeat(string(',')+string('?'), len(ids)-1)
+		query = fmt.Sprintf(deleteFmt, querySymbol)
+	}
+
+	result, err := s.db.ExecContext(ctx, query, arg...)
+	if err != nil {
+		return err
+	}
+
+	count, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if count == 0 {
+		return model.ErrNotFound{}
+	}
+
+	return err
 }
