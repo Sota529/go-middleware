@@ -155,7 +155,7 @@ func (h *TODOHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
-		id
+
 		if err = json.NewEncoder(w).Encode(&res); err != nil {
 			log.Fatal(err)
 			return
