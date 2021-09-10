@@ -43,8 +43,8 @@ func (h *TODOHandler) Update(ctx context.Context, req *model.UpdateTODORequest) 
 
 // Delete handles the endpoint that deletes the TODOs.
 func (h *TODOHandler) Delete(ctx context.Context, req *model.DeleteTODORequest) (*model.DeleteTODOResponse, error) {
-	_ = h.svc.DeleteTODO(ctx, nil)
-	return &model.DeleteTODOResponse{}, nil
+	err := h.svc.DeleteTODO(ctx, req.IDs)
+	return &model.DeleteTODOResponse{}, err
 }
 
 func (h *TODOHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -133,6 +133,30 @@ func (h *TODOHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err := json.NewEncoder(w).Encode(res); err != nil {
+			log.Fatal(err)
+			return
+		}
+	case "DELETE":
+		body := r.Body
+		defer body.Close()
+		var req model.DeleteTODORequest
+		if err := json.NewDecoder(body).Decode(&req); err != nil {
+			log.Fatal(err)
+			return
+		}
+
+		if len(req.IDs) == 0 {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		res, err := h.Delete(r.Context(), &req)
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		id
+		if err = json.NewEncoder(w).Encode(&res); err != nil {
 			log.Fatal(err)
 			return
 		}
