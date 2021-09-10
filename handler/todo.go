@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/TechBowl-japan/go-stations/model"
 	"github.com/TechBowl-japan/go-stations/service"
@@ -30,8 +31,8 @@ func (h *TODOHandler) Create(ctx context.Context, req *model.CreateTODORequest) 
 
 // Read handles the endpoint that reads the TODOs.
 func (h *TODOHandler) Read(ctx context.Context, req *model.ReadTODORequest) (*model.ReadTODOResponse, error) {
-	_, _ = h.svc.ReadTODO(ctx, 0, 0)
-	return &model.ReadTODOResponse{}, nil
+	todo, err := h.svc.ReadTODO(ctx, req.PrevID, req.Size)
+	return &model.ReadTODOResponse{TODOs: todo}, err
 }
 
 // Update handles the endpoint that updates the TODO.
@@ -89,6 +90,43 @@ func (h *TODOHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		res, err := h.Update(r.Context(), &req)
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+
+		if err := json.NewEncoder(w).Encode(res); err != nil {
+			log.Fatal(err)
+			return
+		}
+	case "GET":
+		params := r.URL.Query()
+		PrevId := params.Get("prev_id")
+		Size := params.Get("size")
+		var req model.ReadTODORequest
+		var err error
+		if PrevId == "" {
+			req.PrevID = 0
+		} else {
+			PrevIdToInt, err := strconv.ParseInt(PrevId, 10, 64)
+			if err != nil {
+				log.Fatal(err)
+				return
+			}
+			req.PrevID = PrevIdToInt
+		}
+
+		if Size == "" {
+			req.Size = 0
+		} else {
+			SizeToInt, err := strconv.ParseInt(Size, 10, 64)
+			if err != nil {
+				log.Fatal(err)
+				return
+			}
+			req.Size = SizeToInt
+		}
+		res, err := h.Read(r.Context(), &req)
 		if err != nil {
 			log.Fatal(err)
 			return
