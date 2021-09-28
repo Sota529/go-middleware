@@ -20,7 +20,7 @@ func NewHealthzHandler() *HealthzHandler {
 func (h *HealthzHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	res := &model.HealthzResponse{Message: "OK"}
 	if err := json.NewEncoder(w).Encode(res); err != nil {
-		log.Fatal(err)
+		log.Print(err)
 		return
 	}
 }

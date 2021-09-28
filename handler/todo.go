@@ -54,7 +54,7 @@ func (h *TODOHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		defer body.Close()
 		var req model.CreateTODORequest
 		if err := json.NewDecoder(body).Decode(&req); err != nil {
-			log.Fatal(err)
+			log.Print(err)
 			return
 		}
 
@@ -64,11 +64,11 @@ func (h *TODOHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		todo, err := h.Create(r.Context(), &req)
 		if err != nil {
-			log.Fatal(err)
+			log.Print(err)
 			return
 		}
 		if err := json.NewEncoder(w).Encode(todo); err != nil {
-			log.Fatal(err)
+			log.Print(err)
 			return
 		}
 	case "PUT":
@@ -76,7 +76,7 @@ func (h *TODOHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		defer body.Close()
 		var req model.UpdateTODORequest
 		if err := json.NewDecoder(body).Decode(&req); err != nil {
-			log.Fatal(err)
+			log.Print(err)
 			return
 		}
 		if req.ID == 0 {
@@ -91,12 +91,12 @@ func (h *TODOHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		res, err := h.Update(r.Context(), &req)
 		if err != nil {
-			log.Fatal(err)
+			log.Print(err)
 			return
 		}
 
 		if err := json.NewEncoder(w).Encode(res); err != nil {
-			log.Fatal(err)
+			log.Print(err)
 			return
 		}
 	case "GET":
@@ -110,30 +110,30 @@ func (h *TODOHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		} else {
 			PrevIdToInt, err := strconv.ParseInt(PrevId, 10, 64)
 			if err != nil {
-				log.Fatal(err)
+				log.Print(err)
 				return
 			}
 			req.PrevID = PrevIdToInt
 		}
 
 		if Size == "" {
-			req.Size = 0
+			req.Size = 5
 		} else {
 			SizeToInt, err := strconv.ParseInt(Size, 10, 64)
 			if err != nil {
-				log.Fatal(err)
+				log.Print(err)
 				return
 			}
 			req.Size = SizeToInt
 		}
 		res, err := h.Read(r.Context(), &req)
 		if err != nil {
-			log.Fatal(err)
+			log.Print(err)
 			return
 		}
 
 		if err := json.NewEncoder(w).Encode(res); err != nil {
-			log.Fatal(err)
+			log.Print(err)
 			return
 		}
 	case "DELETE":
@@ -141,7 +141,7 @@ func (h *TODOHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		defer body.Close()
 		var req model.DeleteTODORequest
 		if err := json.NewDecoder(body).Decode(&req); err != nil {
-			log.Fatal(err)
+			log.Print(err)
 			return
 		}
 
@@ -157,7 +157,7 @@ func (h *TODOHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err = json.NewEncoder(w).Encode(&res); err != nil {
-			log.Fatal(err)
+			log.Print(err)
 			return
 		}
 	}
