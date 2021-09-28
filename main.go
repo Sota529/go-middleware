@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/TechBowl-japan/go-stations/middleware"
 	"log"
 	"net/http"
 	"os"
@@ -59,6 +60,8 @@ func realMain() error {
 	// TODO: ここから実装を行う
 	mux.Handle("/healthz", healthz)
 	mux.Handle("/todos", todos)
+	mux.Handle("/do-panic", middleware.Recovery(middleware.NewRecoveryHandler()))
+
 	if err := http.ListenAndServe(defaultPort, mux); err != nil {
 		log.Print(err)
 	}
