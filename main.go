@@ -60,9 +60,9 @@ func realMain() error {
 	// TODO: ここから実装を行う
 	mux.Handle("/healthz", healthz)
 	mux.Handle("/todos", todos)
-	mux.Handle("/do-panic", middleware.Recovery(middleware.NewRecoveryHandler()))
+	mux.Handle("/do-panic", middleware.Os(middleware.ProcessTime(http.HandlerFunc(middleware.HandlePanic))))
 
-	if err := http.ListenAndServe(defaultPort, mux); err != nil {
+	if err := http.ListenAndServe(defaultPort, middleware.Recovery(mux)); err != nil {
 		log.Print(err)
 	}
 	return nil
