@@ -5,16 +5,11 @@ import (
 	"net/http"
 )
 
-type RecoveryHandler struct{}
-
-func NewRecoveryHandler() *RecoveryHandler {
-	return &RecoveryHandler{}
-}
-
 func Recovery(h http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		// TODO: ここに実装をする
 		defer func() {
+			//panicリカバリー
 			if err := recover(); err != nil {
 				fmt.Println("recoverd!")
 			}
@@ -24,6 +19,6 @@ func Recovery(h http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-func (R *RecoveryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	panic("panic!")
+func HandlePanic(w http.ResponseWriter, r *http.Request) {
+	//panic("panic!")
 }
