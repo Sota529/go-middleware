@@ -1,10 +1,13 @@
 package main
 
 import (
+	"context"
 	"github.com/TechBowl-japan/go-stations/middleware"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/TechBowl-japan/go-stations/db"
@@ -16,6 +19,8 @@ func main() {
 	err := realMain()
 	if err != nil {
 		log.Fatalln("main: failed to exit successfully, err =", err)
+	}
+	for {
 	}
 }
 
@@ -61,9 +66,27 @@ func realMain() error {
 	mux.Handle("/healthz", healthz)
 	mux.Handle("/todos", todos)
 	mux.Handle("/do-panic", middleware.Os(middleware.ProcessTime(http.HandlerFunc(middleware.HandlePanic))))
-
-	if err := http.ListenAndServe(defaultPort, middleware.Recovery(mux)); err != nil {
-		log.Print(err)
+	mux.Handle("/auth", middleware.BasicAuth(http.HandlerFunc(middleware.HandlePanic)))
+	srv := &http.Server{
+		Addr:    defaultPort,
+		Handler: middleware.Recovery(mux),
 	}
+	go func() {
+		if err := srv.ListenAndServe(); err != nil {
+			log.Fatalln(err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGTERM, os.Interrupt)
+	log.Printf("SIGNAL %d received, then shutting down...\n", <-quit)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		// Error from closing listeners, or context timeout:
+		log.Println("Failed to gracefully shutdown:", err)
+	}
+	log.Println("Server shutdown")
 	return nil
 }
