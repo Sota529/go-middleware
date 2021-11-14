@@ -6,13 +6,11 @@ import (
 )
 
 func BasicAuth(h http.Handler) http.Handler {
+	authId := os.Getenv("BASIC_AUTH_USER_ID")
+	authPass := os.Getenv("BASIC_AUTH_PASSWORD")
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		os.Setenv("BASIC_AUTH_USER_ID", "id")
-		os.Setenv("BASIC_AUTH_PASSWORD", "pass")
-		authId := os.Getenv("BASIC_AUTH_USER_ID")
-		authPass := os.Getenv("BASIC_AUTH_PASSWORD")
 		userID, password, ok := r.BasicAuth()
-		if ok == false {
+		if !ok {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
