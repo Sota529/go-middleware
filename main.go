@@ -2,13 +2,14 @@ package main
 
 import (
 	"context"
-	"github.com/TechBowl-japan/go-stations/middleware"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/TechBowl-japan/go-stations/middleware"
 
 	"github.com/TechBowl-japan/go-stations/db"
 	"github.com/TechBowl-japan/go-stations/handler"
@@ -19,8 +20,6 @@ func main() {
 	err := realMain()
 	if err != nil {
 		log.Fatalln("main: failed to exit successfully, err =", err)
-	}
-	for {
 	}
 }
 
@@ -65,8 +64,8 @@ func realMain() error {
 	// TODO: ここから実装を行う
 	mux.Handle("/healthz", healthz)
 	mux.Handle("/todos", todos)
-	mux.Handle("/do-panic", middleware.Os(middleware.ProcessTime(http.HandlerFunc(middleware.HandlePanic))))
-	mux.Handle("/auth", middleware.BasicAuth(http.HandlerFunc(middleware.HandlePanic)))
+	mux.Handle("/do-panic", middleware.Os(middleware.ProcessTime(http.HandlerFunc(HeaveFunc))))
+	mux.Handle("/auth", middleware.BasicAuth(http.HandlerFunc(HeaveFunc)))
 	srv := &http.Server{
 		Addr:    defaultPort,
 		Handler: middleware.Recovery(mux),
@@ -89,4 +88,11 @@ func realMain() error {
 	}
 	log.Println("Server shutdown")
 	return nil
+}
+
+func HeaveFunc(w http.ResponseWriter, r *http.Request) {
+	log.Println("heavy process starts")
+	time.Sleep(3 * time.Second)
+	w.Header().Set("Content-Type", "text/plain")
+	w.Write([]byte("done!\n"))
 }
