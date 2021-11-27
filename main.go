@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -15,6 +17,8 @@ import (
 	"github.com/TechBowl-japan/go-stations/handler"
 	"github.com/TechBowl-japan/go-stations/service"
 )
+
+var wg sync.WaitGroup
 
 func main() {
 	err := realMain()
@@ -70,29 +74,26 @@ func realMain() error {
 		Addr:    defaultPort,
 		Handler: middleware.Recovery(mux),
 	}
+
 	go func() {
-		if err := srv.ListenAndServe(); err != nil {
-			log.Fatalln(err)
-		}
+		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+		defer stop()
+		<-ctx.Done()
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		srv.Shutdown(ctx)
 	}()
-
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGTERM, os.Interrupt)
-	log.Printf("SIGNAL %d received, then shutting down...\n", <-quit)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	if err := srv.Shutdown(ctx); err != nil {
-		// Error from closing listeners, or context timeout:
-		log.Println("Failed to gracefully shutdown:", err)
+	if err := srv.ListenAndServe(); err != nil {
+		log.Fatalln(err)
 	}
-	log.Println("Server shutdown")
 	return nil
 }
 
 func HeaveFunc(w http.ResponseWriter, r *http.Request) {
+	wg.Add(1)
 	log.Println("heavy process starts")
 	time.Sleep(3 * time.Second)
 	w.Header().Set("Content-Type", "text/plain")
 	w.Write([]byte("done!\n"))
+	wg.Done()
 }
