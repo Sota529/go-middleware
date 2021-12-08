@@ -75,16 +75,23 @@ func realMain() error {
 	}
 
 	go func() {
-		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
-		defer stop()
-		<-ctx.Done()
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		srv.Shutdown(ctx)
+		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+			// Error starting or closing listener:
+			log.Fatalln("Server closed with error:", err)
+		}
 	}()
-	if err := srv.ListenAndServe(); err != nil {
-		log.Fatalln(err)
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGTERM, os.Interrupt)
+	log.Printf("SIGNAL %d received, then shutting down...\n", <-quit)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		// Error from closing listeners, or context timeout:
+		log.Println("Failed to gracefully shutdown:", err)
 	}
+	log.Println("Server shutdown")
 	return nil
 }
 
