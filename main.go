@@ -81,10 +81,9 @@ func realMain() error {
 		}
 	}()
 
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGTERM, os.Interrupt)
-	log.Printf("SIGNAL %d received, then shutting down...\n", <-quit)
-
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, os.Interrupt)
+	defer stop()
+	<-ctx.Done()
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
@@ -96,10 +95,8 @@ func realMain() error {
 }
 
 func HeaveFunc(w http.ResponseWriter, r *http.Request) {
-	wg.Add(1)
 	log.Println("heavy process starts")
 	time.Sleep(3 * time.Second)
 	w.Header().Set("Content-Type", "text/plain")
 	w.Write([]byte("done!\n"))
-	wg.Done()
 }
